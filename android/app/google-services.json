@@ -1,0 +1,67 @@
+{
+  "project_info": {
+    "project_number": "959928785882",
+    "project_id": "fd-supermart",
+    "storage_bucket": "fd-supermart.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:959928785882:android:7b7f29bf63e059a42fbee3",
+        "android_client_info": {
+          "package_name": "com.fuertedevelopers.fdsupermart"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDLu3K55YJ03NZERWa5jj8hVa7mJU2iHc8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:959928785882:android:e7f22f057d59755d2fbee3",
+        "android_client_info": {
+          "package_name": "com.fuertedevelopers.fdsupermarts"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDLu3K55YJ03NZERWa5jj8hVa7mJU2iHc8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:959928785882:android:a9c981efe970ced12fbee3",
+        "android_client_info": {
+          "package_name": "com.fuertedevelopers.supermartdelivery"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDLu3K55YJ03NZERWa5jj8hVa7mJU2iHc8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
