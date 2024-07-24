@@ -29,7 +29,7 @@ class OrdersList1 extends StatelessWidget {
         }
 
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return loadingAnimation();
         }
 
         if (!snapshot.hasData || snapshot.data!.isEmpty || snapshot.data!.entries.isEmpty) {
@@ -39,7 +39,9 @@ class OrdersList1 extends StatelessWidget {
         Map<String, List<DocumentSnapshot>> ordersByMonth = snapshot.data!;
         // print('Orders By Month: $ordersByMonth');
 
-        return ListView(
+        return snapshot.data!.entries.isEmpty?
+        const Center(child: Text('No orders found'))
+        :ListView(
           shrinkWrap: true,
           physics: const ScrollPhysics(),
           children: ordersByMonth.entries.map((entry) {
@@ -103,8 +105,10 @@ class OrdersList1 extends StatelessWidget {
                       Timestamp orderDate = data['orderDate'];
                       String year = orderDate.toDate().year.toString();
                       String month = orderDate.toDate().month.toString();
-                      return _onReject(data['userUid'], orderId,year,month,data['userName'],data['userAddress'],
-                          data['userUid'],data['orderDate'].toDate(),data['orderId'],totalPrice.toStringAsFixed(2),totalQuantity);
+                      return _onReject(data['userUid'], orderId,year,month,data['userName'],
+                          data['userAddress'],
+                          data['userUid'],data['orderDate'].toDate(),data['orderId'],
+                          totalPrice.toStringAsFixed(2),totalQuantity);
                     }),
                     onNo: () => _handleOrderAction(context, () {
                       Timestamp orderDate = data['orderDate'];
@@ -112,7 +116,8 @@ class OrdersList1 extends StatelessWidget {
                       String month = orderDate.toDate().month.toString();
                       return _onNo(data['userUid'], orderId,
                         year,month,data['userName'],data['userAddress'],
-                        data['userUid'],data['orderDate'].toDate(),data['orderId'],totalPrice.toStringAsFixed(2),totalQuantity);
+                        data['userUid'],data['orderDate'].toDate(),data['orderId'],
+                          totalPrice.toStringAsFixed(2),totalQuantity);
                     }),
                     onYes: () => _handleOrderAction(context, () {
                       Timestamp orderDate = data['orderDate'];
@@ -120,7 +125,8 @@ class OrdersList1 extends StatelessWidget {
                       String month = orderDate.toDate().month.toString();
                       return _onYes(data['userUid'], orderId,
                         year,month,data['userName'],data['userAddress'],
-                        data['userUid'],data['orderDate'].toDate(),data['orderId'],totalPrice.toStringAsFixed(2),totalQuantity);
+                        data['userUid'],data['orderDate'].toDate(),data['orderId'],
+                          totalPrice.toStringAsFixed(2),totalQuantity);
                     }),
                   );
                 }),
@@ -160,10 +166,10 @@ class OrdersList1 extends StatelessWidget {
       'completed':false,
       'pending':true,
       'returned':false,
-      'delivered':false,
+      'canceled':false,
     };
-    await _updatUserData(newOrderDetail);
-    await updateOrderData(userId, orderId, year,month, false,dataToUpdate);
+    await _updateUserData(newOrderDetail);
+    await updateOrderData(userId, orderId, year,month, true,dataToUpdate);
     await _incrementDeliveryCount('pendingDeliveries');
   }
 
@@ -206,9 +212,9 @@ class OrdersList1 extends StatelessWidget {
       'completed':false,
       'pending':false,
       'returned':false,
-      'delivered':false,
+      'canceled':true,
     };
-await _updatUserData(newOrderDetail);
+await _updateUserData(newOrderDetail);
     await updateOrderData(userId, orderId, year,month,true,dataToUpdate);
     await _incrementDeliveryCount('canceledDeliveries');
   }
@@ -235,11 +241,11 @@ await _updatUserData(newOrderDetail);
       'completed':true,
       'pending':false,
       'returned':false,
-      'delivered':true,
+      'canceled':false,
     };
 
     await updateOrderData(userId, orderId,year,month,true, dataToUpdate);
-    await _updatUserData(updatedOrderDetail);
+    await _updateUserData(updatedOrderDetail);
     await _incrementDeliveryCount('completedDeliveries');
     await _decrementDeliveryCount('pendingDeliveries');
 
@@ -252,8 +258,7 @@ await _updatUserData(newOrderDetail);
     // Implement the required functionality for 'No'
     Map<String, dynamic> dataToUpdate = {
       'returnedAt': Timestamp.now(),
-      'deliveryStatus': false,
-      'paymentStatus': false,
+
       'orderReturn':true,
       // 'orderStatus':true,
       // 'orderVisible':true,
@@ -272,14 +277,14 @@ await _updatUserData(newOrderDetail);
       'completed':false,
       'pending':false,
       'returned':true,
-      'delivered':false,
+      'canceled':false,
     };
 await updateOrderData(userId, orderId, year, month, true, dataToUpdate);
     await _incrementDeliveryCount('returnDeliveries');
     await _decrementDeliveryCount('pendingDeliveries');
     // await FirebaseFirestore.instance.collection('users').doc(userId).update(
     //     {'hasOrdered':true});
-
+await _updateUserData(updatedOrderDetail);
   }
 
   Future<void> _incrementDeliveryCount(String field) async {
@@ -374,17 +379,22 @@ Future<void> updateOrderData(String userId, String orderId,String year,String mo
 
 }
 
-Future<void> _updatUserData(Map<String, dynamic> updatedOrderDetail) async {
+Future<void> _updateUserData(Map<String, dynamic> updatedOrderDetail) async {
+  // Get the delivery user number from shared preferences
   String? number = SharedPreferencesHelper.getString('number');
   if (number == null) throw Exception('Delivery user number not found');
 
+  // Reference to the Orders document in Firestore
   DocumentReference docRef = FirebaseFirestore.instance
       .collection('Delivery User')
       .doc(number)
       .collection('User Info')
       .doc('Orders');
 
+  // Fetch the document snapshot
   DocumentSnapshot docSnapshot = await docRef.get();
+
+  // Initialize allOrderDetails list
   List<dynamic> allOrderDetails = docSnapshot.exists
       ? (docSnapshot.data() as Map<String, dynamic>)['allOrderDetails'] ?? []
       : [];
@@ -393,14 +403,20 @@ Future<void> _updatUserData(Map<String, dynamic> updatedOrderDetail) async {
   int index = allOrderDetails.indexWhere((order) => order['orderId'] == updatedOrderDetail['orderId']);
 
   if (index != -1) {
+    // Update the existing order
     allOrderDetails[index] = updatedOrderDetail;
+    print('Order updated: ${updatedOrderDetail['orderId']}');
   } else {
     // If the order is not found, add it to the list
     allOrderDetails.add(updatedOrderDetail);
+    print('Order added: ${updatedOrderDetail['orderId']}');
   }
 
-  await docRef.update({'allOrderDetails': allOrderDetails});
+  // Use set() with merge: true to create the document if it does not exist
+  await docRef.set({'allOrderDetails': allOrderDetails}, SetOptions(merge: true));
+  print('Orders document updated in Firestore');
 }
+
 
 // Stream<Map<String, List<DocumentSnapshot<Object?>>>> _getAllUsersOrdersStream(
 //     bool orderVisible,bool orderReturn,bool paymentStatus,bool orderStatus,bool deliveryStatus) async* {
@@ -483,16 +499,116 @@ Future<void> _updatUserData(Map<String, dynamic> updatedOrderDetail) async {
 // }
 
 
+// Stream<Map<String, List<DocumentSnapshot<Object?>>>> _getAllUsersOrdersStream(
+//     bool orderVisible, bool orderReturn, bool paymentStatus, bool orderStatus, bool deliveryStatus,bool hasOrdered) async* {
+//   Stream<QuerySnapshot<Object?>> usersStream = FirebaseFirestore.instance.collection('users').where('hasOrdered', isEqualTo: hasOrdered).snapshots();
+//   // SharedPreferences prefs = await SharedPreferences.getInstance();
+//   String? number = SharedPreferencesHelper.getString('number');
+//
+//   if (number == null) {
+//     throw Exception('Delivery user number not found');
+//   }
+//
+//   DocumentSnapshot deliveryUserDoc = await FirebaseFirestore.instance
+//       .collection('Delivery User')
+//       .doc(number)
+//       .collection('User Info')
+//       .doc('Profile')
+//       .get();
+//
+//   yield* usersStream.asyncExpand((usersSnapshot) {
+//     List<Stream<Map<String, List<DocumentSnapshot>>>> orderStreams = usersSnapshot.docs.map((userDoc) {
+//       String city = deliveryUserDoc['city'];
+//       String state = deliveryUserDoc['state'];
+//
+//       // Get the current date
+//       DateTime now = DateTime.now();
+//
+//       // Create a list of DateTime objects for the current month and the two previous months
+//       List<DateTime> months = [
+//         DateTime(now.year, now.month),
+//         DateTime(now.year, now.month - 1),
+//         DateTime(now.year, now.month - 2),
+//       ];
+//
+//       // Create a stream for each month
+//       List<Stream<Map<String, List<DocumentSnapshot>>>> monthStreams = months.map((date) {
+//         String year = date.year.toString();
+//         String month = date.month.toString();
+//         String monthName = DateFormat.MMMM().format(date);
+//         print('Fetching orders for $monthName $year');
+//
+//         return userDoc.reference
+//             .collection('orders')
+//             .doc(year)
+//             .collection(month)
+//         // .where('city'.toLowerCase(),isEqualTo:city.toLowerCase())
+//         // .where('state'.toLowerCase(),isEqualTo:state.toLowerCase())
+//             .where('deliveryStatus', isEqualTo: deliveryStatus)
+//             .where('orderStatus', isEqualTo: orderStatus)
+//             .where('paymentStatus', isEqualTo: paymentStatus)
+//             .where('orderReturn', isEqualTo: orderReturn)
+//         // .where('orderVisible', isEqualTo: orderVisible)
+//             .snapshots()
+//             .map((orderSnapshot) {
+//           print('Fetched ${orderSnapshot.docs.length} orders for $monthName $year');
+//
+//           return {monthName: orderSnapshot.docs};
+//         });
+//       }).toList();
+//
+//       // Combine the streams for the different months
+//       return CombineLatestStream.list(monthStreams).map((listOfMonthOrders) {
+//         Map<String, List<DocumentSnapshot>> ordersMap = {};
+//         for (var monthOrders in listOfMonthOrders) {
+//           monthOrders.forEach((month, orders) {
+//             if (!ordersMap.containsKey(month)) {
+//               ordersMap[month] = [];
+//             }
+//             ordersMap[month]!.addAll(orders);
+//           });
+//         }
+//         print('Combined orders map for user: $ordersMap');
+//         return ordersMap;
+//       });
+//     }).toList();
+//
+//     // Combine the streams for all users
+//     return CombineLatestStream.list(orderStreams).map((listOfOrdersMaps) {
+//       Map<String, List<DocumentSnapshot>> combinedOrdersMap = {};
+//       for (var userOrdersMap in listOfOrdersMaps) {
+//         userOrdersMap.forEach((month, orders) {
+//           if (!combinedOrdersMap.containsKey(month)) {
+//             combinedOrdersMap[month] = [];
+//           }
+//           combinedOrdersMap[month]!.addAll(orders);
+//         });
+//       }
+//
+//       print('Final combined orders map: $combinedOrdersMap');
+//
+//       return combinedOrdersMap;
+//     });
+//   });
+// }
+
 Stream<Map<String, List<DocumentSnapshot<Object?>>>> _getAllUsersOrdersStream(
-    bool orderVisible, bool orderReturn, bool paymentStatus, bool orderStatus, bool deliveryStatus,bool hasOrdered) async* {
-  Stream<QuerySnapshot<Object?>> usersStream = FirebaseFirestore.instance.collection('users').where('hasOrdered', isEqualTo: hasOrdered).snapshots();
-  // SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool orderVisible, bool orderReturn, bool paymentStatus, bool orderStatus, bool deliveryStatus, bool hasOrdered) async* {
+
+  // Stream to get all users who have ordered, based on the 'hasOrdered' flag
+  Stream<QuerySnapshot<Object?>> usersStream = FirebaseFirestore.instance
+      .collection('users')
+      .where('hasOrdered', isEqualTo: hasOrdered)
+      .snapshots();
+
+  // Retrieve the delivery user number from shared preferences
   String? number = SharedPreferencesHelper.getString('number');
 
   if (number == null) {
     throw Exception('Delivery user number not found');
   }
 
+  // Fetch the delivery user's profile document
   DocumentSnapshot deliveryUserDoc = await FirebaseFirestore.instance
       .collection('Delivery User')
       .doc(number)
@@ -500,48 +616,51 @@ Stream<Map<String, List<DocumentSnapshot<Object?>>>> _getAllUsersOrdersStream(
       .doc('Profile')
       .get();
 
+  // Expand the stream of users to streams of orders for each user
   yield* usersStream.asyncExpand((usersSnapshot) {
     List<Stream<Map<String, List<DocumentSnapshot>>>> orderStreams = usersSnapshot.docs.map((userDoc) {
-      String city = deliveryUserDoc['city'];
-      String state = deliveryUserDoc['state'];
-
-      // Get the current date
       DateTime now = DateTime.now();
 
-      // Create a list of DateTime objects for the current month and the two previous months
+      // List of months to fetch orders from: current month and two previous months
       List<DateTime> months = [
         DateTime(now.year, now.month),
         DateTime(now.year, now.month - 1),
         DateTime(now.year, now.month - 2),
       ];
 
-      // Create a stream for each month
+      // Create a stream for orders for each month
       List<Stream<Map<String, List<DocumentSnapshot>>>> monthStreams = months.map((date) {
         String year = date.year.toString();
         String month = date.month.toString();
         String monthName = DateFormat.MMMM().format(date);
         print('Fetching orders for $monthName $year');
 
-        return userDoc.reference
+        // Initialize the query with required filters
+        Query<Object?> query = userDoc.reference
             .collection('orders')
             .doc(year)
             .collection(month)
-        // .where('city'.toLowerCase(),isEqualTo:city.toLowerCase())
-        // .where('state'.toLowerCase(),isEqualTo:state.toLowerCase())
             .where('deliveryStatus', isEqualTo: deliveryStatus)
             .where('orderStatus', isEqualTo: orderStatus)
             .where('paymentStatus', isEqualTo: paymentStatus)
-            .where('orderReturn', isEqualTo: orderReturn)
-            // .where('orderVisible', isEqualTo: orderVisible)
-            .snapshots()
-            .map((orderSnapshot) {
+            .where('orderReturn', isEqualTo: orderReturn);
+
+        // Fetch the orders and apply additional filtering for 'orderVisible' in Dart code
+        return query.snapshots().map((orderSnapshot) {
           print('Fetched ${orderSnapshot.docs.length} orders for $monthName $year');
 
-          return {monthName: orderSnapshot.docs};
+          List<DocumentSnapshot> filteredDocs = orderSnapshot.docs.where((doc) {
+            Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+            // Check if 'orderVisible' exists and matches the provided value
+            return !data.containsKey('orderVisible') || data['orderVisible'] == orderVisible;
+          }).toList();
+
+          // Return orders for the current month
+          return {monthName: filteredDocs};
         });
       }).toList();
 
-      // Combine the streams for the different months
+      // Combine the streams for orders from different months into one
       return CombineLatestStream.list(monthStreams).map((listOfMonthOrders) {
         Map<String, List<DocumentSnapshot>> ordersMap = {};
         for (var monthOrders in listOfMonthOrders) {
@@ -557,7 +676,7 @@ Stream<Map<String, List<DocumentSnapshot<Object?>>>> _getAllUsersOrdersStream(
       });
     }).toList();
 
-    // Combine the streams for all users
+    // Combine the streams of orders from different users into one
     return CombineLatestStream.list(orderStreams).map((listOfOrdersMaps) {
       Map<String, List<DocumentSnapshot>> combinedOrdersMap = {};
       for (var userOrdersMap in listOfOrdersMaps) {
@@ -575,4 +694,5 @@ Stream<Map<String, List<DocumentSnapshot<Object?>>>> _getAllUsersOrdersStream(
     });
   });
 }
+
 

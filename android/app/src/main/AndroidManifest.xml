@@ -8,7 +8,7 @@
         android:name="${applicationName}"
 
         android:enableOnBackInvokedCallback="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/launcher_icon"
         android:label="delivery">
         <activity
             android:name=".MainActivity"

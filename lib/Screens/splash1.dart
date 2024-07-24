@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:delivery/Screens/Authentication%20Screens/Phone%20Auth%20Screen/phone_auth.dart';
+import 'package:delivery/Screens/Bnb%20Index/bnb_index.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -30,7 +31,7 @@ class _Splash1State extends State<Splash1> with TickerProviderStateMixin {
     Timer(
       const Duration(seconds: 3),
       () => replace(context,
-          // auth.currentUser != null ? const PersonalInfo() :
+          auth.currentUser != null ? const BnbIndex() :
           const PhoneAuth()),
     );
   }

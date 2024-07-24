@@ -8,10 +8,10 @@ import 'package:delivery/Utils/Global/global.dart';
 import 'package:delivery/Utils/utils.dart';
 import 'package:delivery/Widgets/widgets.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lottie/lottie.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class Otp extends StatefulWidget {
   final String verificationId, phone;
@@ -92,12 +92,12 @@ class _OtpState extends State<Otp> {
           // Get user data
           Map<String, dynamic>? userData = await getUserData(widget.phone);
 
-          if (userData != null ) {
+          if (userData != null) {
             // Save user data to SharedPreferences
             await saveUserDataToSharedPreferences(userData);
 
             // Navigate to the home page if the user exists
-            remove(context, const BnbIndex());
+            mounted?remove(context, const BnbIndex()):null;
             setState(() {
               _isLoading = false;
             });
@@ -108,8 +108,11 @@ class _OtpState extends State<Otp> {
       }
     } catch (e) {
       if (mounted) {
+        if (kDebugMode) {
+          print('Failed to verify OTP: $e');
+        }
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Failed to verify OTP: $e')));
+            .showSnackBar(const SnackBar(content: Center(child: Text('Please enter OTP/ Invalid OTP'))));
       }
     } finally {
       setState(() {
@@ -256,6 +259,11 @@ class _OtpState extends State<Otp> {
       decoration: BoxDecoration(
           color: Colors.white, borderRadius: BorderRadius.circular(5)),
       child: TextFormField(
+        validator: (value){
+          // final _otpControllers. =value;
+          _otpControllers.isEmpty?'Please Enter your OTP':null;
+          return null;
+        },
         controller: _otpControllers[index],
         focusNode: _focusNodes[index],
         keyboardType: TextInputType.number,
@@ -295,14 +303,16 @@ class _OtpState extends State<Otp> {
 
 Future<void> saveUserDataToSharedPreferences(
     Map<String, dynamic> userData) async {
-  // SharedPreferences prefs = await SharedPreferences.getInstance();
   await SharedPreferencesHelper.setString('name', userData['name'] ?? '');
   await SharedPreferencesHelper.setString('dob', userData['dob'] ?? '');
   await SharedPreferencesHelper.setString('email', userData['email'] ?? '');
   await SharedPreferencesHelper.setString('gender', userData['gender'] ?? '');
-  await SharedPreferencesHelper.setString('panNo', userData['panno'] ?? '');
-  await SharedPreferencesHelper.setString('aadhaar', userData['aadhaar'] ?? '');
+  await SharedPreferencesHelper.setString('panNo', userData['panNo'] ?? '');
+  await SharedPreferencesHelper.setString('aadhaarNo', userData['aadhaarNo'] ?? '');
   await SharedPreferencesHelper.setString('profileImage', userData['profileImage'] ?? '');
+  await SharedPreferencesHelper.setString('city', userData['city'] ?? '');
+  await SharedPreferencesHelper.setString('state', userData['state'] ?? '');
+  await SharedPreferencesHelper.setString('address', userData['address'] ?? '');
 }
 
 Future<bool> checkIfUserExists(String phoneNumber) async {

@@ -62,117 +62,51 @@ class DashboardScreen extends StatelessWidget {
           children: [
             Card(
               child: Padding(
-                padding: const EdgeInsets.all(11.0),
-                child: StreamBuilder<DocumentSnapshot>(
-                  stream: getDeliveryCountsStream(),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasError) {
-                      return Text('Error: ${snapshot.error}');
-                    }
+                  padding: const EdgeInsets.all(11.0),
+                  child: StreamBuilder<DocumentSnapshot>(
+                    stream: getDeliveryCountsStream(),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasError) {
+                        return Text('Error: ${snapshot.error}');
+                      }
 
-                    switch (snapshot.connectionState) {
-                      case ConnectionState.waiting:
-                        return const Text('Loading....');
-                      default:
-                        if (!snapshot.hasData || !snapshot.data!.exists) {
-                          // var data = snapshot.data!.data() as Map<String, dynamic>;
-                          int completeDeliveryCount =  0;
-                          int pendingDeliveryCount =  0;
-                          int cancelDeliveryCount =  0;
-                          int returnDeliveryCount =  0;
-                          return  GridView.count(
-                            physics: const NeverScrollableScrollPhysics(),
-                            crossAxisCount: 2,
-                            mainAxisSpacing: 4,
-                            crossAxisSpacing: 5,
-                            shrinkWrap: true,
-                            children: [
-                              GestureDetector(onTap:()=>push(context,const Completed()),
-                                child: _DeliveryCard(
-                                  icon: Icons.check_circle_outline,
-                                  title: 'Complete Delivery',
-                                  count: completeDeliveryCount,
-                                  color: Colors.green.shade50,
-                                ),
-                              ),
-                              GestureDetector(onTap:()=>push(context,const Pending()),
-                                child: _DeliveryCard(
-                                  icon: Icons.delivery_dining,
-                                  title: 'Pending Delivery',
-                                  count: pendingDeliveryCount,
-                                  color: Colors.orange.shade50,
-                                ),
-                              ),
-                              GestureDetector(onTap:()=>push(context,const Canceled()),
-                                child: _DeliveryCard(
-                                  icon: Icons.cancel_outlined,
-                                  title: 'Cancel Delivery',
-                                  count: cancelDeliveryCount,
-                                  color: Colors.red.shade50,
-                                ),
-                              ),
-                              GestureDetector(onTap:()=>push(context,const Returned()),
-                                child: _DeliveryCard(
-                                  icon: Icons.swap_horiz,
-                                  title: 'Return Delivery',
-                                  count: returnDeliveryCount,
-                                  color: Colors.blue.shade50,
-                                ),
-                              ),
-                            ],
-                          );
-                        }
+                      switch (snapshot.connectionState) {
+                        case ConnectionState.waiting:
+                          return const Text('Loading....');
+                        default:
+                          if (!snapshot.hasData || !snapshot.data!.exists) {
+                            // var data = snapshot.data!.data() as Map<String, dynamic>;
+                            int completeDeliveryCount = 0;
+                            int pendingDeliveryCount = 0;
+                            int cancelDeliveryCount = 0;
+                            int returnDeliveryCount = 0;
+                            return buildGridView(
+                                context,
+                                completeDeliveryCount,
+                                pendingDeliveryCount,
+                                cancelDeliveryCount,
+                                returnDeliveryCount);
+                          }
 
-                        var data = snapshot.data!.data() as Map<String, dynamic>;
-                        int completeDeliveryCount = data['completedDeliveries'] ?? 0;
-                        int pendingDeliveryCount = data['pendingDeliveries'] ?? 0;
-                        int cancelDeliveryCount = data['canceledDeliveries'] ?? 0;
-                        int returnDeliveryCount = data['returnDeliveries'] ?? 0;
-                        return GridView.count(
-                          physics: const NeverScrollableScrollPhysics(),
-                          crossAxisCount: 2,
-                          mainAxisSpacing: 4,
-                          crossAxisSpacing: 5,
-                          shrinkWrap: true,
-                          children: [
-                            GestureDetector(onTap:()=>push(context,const Completed()),
-                              child: _DeliveryCard(
-                                icon: Icons.check_circle_outline,
-                                title: 'Complete Delivery',
-                                count: completeDeliveryCount,
-                                color: Colors.green.shade50,
-                              ),
-                            ),
-                            GestureDetector(onTap:()=>push(context,const Pending()),
-                              child: _DeliveryCard(
-                                icon: Icons.delivery_dining,
-                                title: 'Pending Delivery',
-                                count: pendingDeliveryCount,
-                                color: Colors.orange.shade50,
-                              ),
-                            ),
-                            GestureDetector(onTap:()=>push(context,const Canceled()),
-                              child: _DeliveryCard(
-                                icon: Icons.cancel_outlined,
-                                title: 'Cancel Delivery',
-                                count: cancelDeliveryCount,
-                                color: Colors.red.shade50,
-                              ),
-                            ),
-                            GestureDetector(onTap:()=>push(context,const Returned()),
-                              child: _DeliveryCard(
-                                icon: Icons.swap_horiz,
-                                title: 'Return Delivery',
-                                count: returnDeliveryCount,
-                                color: Colors.blue.shade50,
-                              ),
-                            ),
-                          ],
-                        );
-                    }
-                  },
-                )
-              ),
+                          var data =
+                              snapshot.data!.data() as Map<String, dynamic>;
+                          int completeDeliveryCount =
+                              data['completedDeliveries'] ?? 0;
+                          int pendingDeliveryCount =
+                              data['pendingDeliveries'] ?? 0;
+                          int cancelDeliveryCount =
+                              data['canceledDeliveries'] ?? 0;
+                          int returnDeliveryCount =
+                              data['returnDeliveries'] ?? 0;
+                          return buildGridView(
+                              context,
+                              completeDeliveryCount,
+                              pendingDeliveryCount,
+                              cancelDeliveryCount,
+                              returnDeliveryCount);
+                      }
+                    },
+                  )),
             ),
             Gap.h(30),
             Text(
@@ -180,12 +114,72 @@ class DashboardScreen extends StatelessWidget {
               style: textTheme.headlineMedium,
             ),
             Gap.h(20),
-
-             const OrdersList1(hasOrdered:true,status: 'new order', orderVisible: false, deliveryStatus: false, orderReturn: false, paymentStatus: false, orderStatus: true,)
+            const OrdersList1(
+              hasOrdered: true,
+              status: 'new order',
+              orderReturn: false,
+              paymentStatus: false,
+              orderStatus: true,
+              deliveryStatus: false,
+              orderVisible: true,
+            ),
           ],
         ),
       ),
       // bottomNavigationBar: _BottomNavigationBar(),
+    );
+  }
+
+  GridView buildGridView(
+      BuildContext context,
+      int completeDeliveryCount,
+      int pendingDeliveryCount,
+      int cancelDeliveryCount,
+      int returnDeliveryCount) {
+    return GridView.count(
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 2,
+      mainAxisSpacing: 4,
+      crossAxisSpacing: 5,
+      shrinkWrap: true,
+      children: [
+        GestureDetector(
+          onTap: () => push(context, const Completed()),
+          child: _DeliveryCard(
+            icon: Icons.check_circle_outline,
+            title: 'Complete Delivery',
+            count: completeDeliveryCount,
+            color: Colors.green.shade50,
+          ),
+        ),
+        GestureDetector(
+          onTap: () => push(context, const Pending()),
+          child: _DeliveryCard(
+            icon: Icons.delivery_dining,
+            title: 'Pending Delivery',
+            count: pendingDeliveryCount,
+            color: Colors.orange.shade50,
+          ),
+        ),
+        GestureDetector(
+          onTap: () => push(context, const Canceled()),
+          child: _DeliveryCard(
+            icon: Icons.cancel_outlined,
+            title: 'Cancel Delivery',
+            count: cancelDeliveryCount,
+            color: Colors.red.shade50,
+          ),
+        ),
+        GestureDetector(
+          onTap: () => push(context, const Returned()),
+          child: _DeliveryCard(
+            icon: Icons.swap_horiz,
+            title: 'Return Delivery',
+            count: returnDeliveryCount,
+            color: Colors.blue.shade50,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -277,6 +271,7 @@ class _DeliveryCard extends StatelessWidget {
     );
   }
 }
+
 Stream<DocumentSnapshot> getDeliveryCountsStream() async* {
   String? number = SharedPreferencesHelper.getString('number');
   if (number != null) {

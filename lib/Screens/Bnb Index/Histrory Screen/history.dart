@@ -20,8 +20,8 @@ class HistoryState extends State<History> {
         title: const Text('History'),
         centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
+      body: const SingleChildScrollView(
+        padding: EdgeInsets.fromLTRB(20, 10, 20, 5),
         physics: ScrollPhysics(),
         child: Column(children: [
           Center(child: Text('Completed'),),

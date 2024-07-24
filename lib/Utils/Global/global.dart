@@ -1,7 +1,10 @@
 library globals;
 
 import 'package:flutter/material.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../utils.dart';
 
 late TextTheme textTheme;
 
@@ -46,4 +49,17 @@ class SharedPreferencesHelper {
   }
 
 // Add other methods as needed...
+}
+
+Widget loadingAnimation(
+    // {required Color primaryColor, required Color secondaryColor, required Color thirdColor, double size = 50}
+    ) {
+  return Center(
+    child: LoadingAnimationWidget.discreteCircle(
+      color: m,
+      secondRingColor: Colors.white70,
+      thirdRingColor: sec,
+      size: 50,
+    ),
+  );
 }

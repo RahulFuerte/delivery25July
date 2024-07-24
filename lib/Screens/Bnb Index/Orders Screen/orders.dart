@@ -78,7 +78,7 @@ class _OrdersPageState extends State<OrdersPage>
           padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 10),
           child: TabBarView(
             controller: _tabController,
-            children: const [
+            children:  const [
               OrdersList1(
                 hasOrdered: true,
                 status: 'new order',
@@ -89,7 +89,7 @@ class _OrdersPageState extends State<OrdersPage>
                 orderVisible: true,
               ),
               OrdersList1(
-                hasOrdered: false,
+                hasOrdered:true,
                 status: 'pending',
                 orderReturn: false,
                 paymentStatus: false,
@@ -98,7 +98,7 @@ class _OrdersPageState extends State<OrdersPage>
                 orderVisible: true,
               ),
               OrdersList1(
-                hasOrdered: false,
+                hasOrdered: true,
                 status: 'delivered',
                 orderReturn: false,
                 paymentStatus: true,
@@ -111,8 +111,8 @@ class _OrdersPageState extends State<OrdersPage>
                 status: 'return',
                 orderReturn: true,
                 paymentStatus: false,
-                orderStatus: true,
-                deliveryStatus: true,
+                orderStatus: false,
+                deliveryStatus: false,
                 orderVisible: true,
               ),
             ],

@@ -8,7 +8,7 @@ class Completed extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(appBar: AppBar(title:Text('Completed'),centerTitle: true,),
+    return Scaffold(appBar: AppBar(title:const Text('Completed'),centerTitle: true,),
     body: const Padding(
       padding: EdgeInsets.fromLTRB(20,10,20,5),
       child: DeliveryStatus(status: 'completed',),
@@ -22,55 +22,58 @@ class DeliveryStatus extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return  StreamBuilder<DocumentSnapshot>(
-        stream: getAllOrderDetails(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (!snapshot.hasData || !snapshot.data!.exists) {
-            return Center(child: Text('No $status orders found.'));
-          }
+    return  RefreshIndicator(
+      onRefresh: _refresh,
+      child: StreamBuilder<DocumentSnapshot>(
+          stream: getAllOrderDetails(),
+          builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error}'));
+            }
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (!snapshot.hasData || !snapshot.data!.exists) {
+              return Center(child: Text('No $status orders found.'));
+            }
 
-          final allOrderDetails = (snapshot.data!.data() as Map<String, dynamic>)['allOrderDetails'] as List<dynamic>;
+            final allOrderDetails = (snapshot.data!.data() as Map<String, dynamic>)['allOrderDetails'] as List<dynamic>;
 
-          // Filter completed orders
-          final completedOrders = allOrderDetails.where((order) {
-            final orderMap = order as Map<String, dynamic>;
-            return orderMap[status] == true;
-          }).toList();
+            // Filter completed orders
+            final completedOrders = allOrderDetails.where((order) {
+              final orderMap = order as Map<String, dynamic>;
+              return orderMap[status] == true;
+            }).toList();
 
-          if (completedOrders.isEmpty) {
-            return Center(child: Text('No $status orders found.'));
-          }
+            if (completedOrders.isEmpty) {
+              return Center(child: Text('No $status orders found.'));
+            }
 
-          return ListView.builder(
-            shrinkWrap: true,
-            physics: ScrollPhysics(),
-            itemCount: completedOrders.length,
-            itemBuilder: (context, index) {
-              final order = completedOrders[index] as Map<String, dynamic>;
-              return OrderCard(
-                name: order['name'],
-                address: order['address'],
-                dateTime: (order['orderTime'] as Timestamp).toDate(), // Convert timestamp to DateTime
-                status: 'Completed',
-                totalPrice: order['totalPrice'],
-                totalQty: order['quantity'],
-                onAccept: () {},
-                onReject: () {},
-                onYes: () {},
-                onNo: () {},
-                orderId: order['orderId'],
-                userId: order['number'],
-              );
-            },
-          );
-        },
-      );
+            return ListView.builder(
+              shrinkWrap: true,
+              physics: const ScrollPhysics(),
+              itemCount: completedOrders.length,
+              itemBuilder: (context, index) {
+                final order = completedOrders[index] as Map<String, dynamic>;
+                return OrderCard(
+                  name: order['name'],
+                  address: order['address'],
+                  dateTime: (order['orderTime'] as Timestamp).toDate(), // Convert timestamp to DateTime
+                  status: 'Completed',
+                  totalPrice: order['totalPrice'],
+                  totalQty: order['quantity'],
+                  onAccept: () {},
+                  onReject: () {},
+                  onYes: () {},
+                  onNo: () {},
+                  orderId: order['orderId'],
+                  userId: order['number'],
+                );
+              },
+            );
+          },
+        ),
+    );
 
   }
  Stream<DocumentSnapshot> getAllOrderDetails() {
@@ -82,6 +85,10 @@ class DeliveryStatus extends StatelessWidget {
        .doc('Orders')
        .snapshots();
  }
+
+  Future<void> _refresh() async{
+    await Future.delayed(const Duration(seconds: 3));
+  }
 }
 
 

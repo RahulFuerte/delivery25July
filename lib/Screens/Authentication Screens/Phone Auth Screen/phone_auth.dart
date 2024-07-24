@@ -91,7 +91,14 @@ class _PhoneAuthState extends State<PhoneAuth> {
       });
 
       final phone = '$_countryCode${_phoneController.text}';
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return loadingAnimation();
 
+        },
+      );
 
       try {
         await FirebaseAuth.instance.verifyPhoneNumber(

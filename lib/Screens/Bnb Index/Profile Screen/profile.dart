@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:delivery/Widgets/widgets.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -35,7 +34,8 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
-    _loadUserData();
+    // _loadUserData();
+    loadData();
   }
 
   // void _loadUserData() async {
@@ -90,11 +90,26 @@ class _ProfilePageState extends State<ProfilePage> {
   //     print('Error loading user data: $e');
   //   }
   // }
+  void loadData(){
+    setState(() {
+      _profileImage =SharedPreferencesHelper.getString('profileImage')??'a';
+      // ??userData['profileImage'];
+
+      _nameController.text = SharedPreferencesHelper.getString('name')??'b';
+      // ??userData['name'];
+      _ageController.text = SharedPreferencesHelper.getString('dob')??'c';
+      // ??userData['dob'].toString();
+      _addressController.text = SharedPreferencesHelper.getString('address')??'d';
+      // ??userData['address'];
+      _cityController.text = SharedPreferencesHelper.getString('city')??'e';
+      // ??userData['city'];
+    });
+  }
 
   void _loadUserData() async {
 
     String? number = SharedPreferencesHelper.getString('number');
-    print(number);
+
     final docRef = _usersCollection.doc(number).collection('User Info').doc('Profile');
 
     try {
@@ -104,15 +119,19 @@ class _ProfilePageState extends State<ProfilePage> {
         final userData = docSnap.data() as Map<String, dynamic>;
 
         setState(() {
-          _profileImage =SharedPreferencesHelper.getString('profileImage')??userData['profileImage'];
+          _profileImage =SharedPreferencesHelper.getString('profileImage')!;
+              // ??userData['profileImage'];
 
-          _nameController.text = SharedPreferencesHelper.getString('name')??userData['name'];
-          _ageController.text = SharedPreferencesHelper.getString('dob')??userData['dob'].toString();
-          _addressController.text = SharedPreferencesHelper.getString('address')??userData['address'];
-          _cityController.text = SharedPreferencesHelper.getString('city')??userData['city'];
+          _nameController.text = SharedPreferencesHelper.getString('name')!;
+              // ??userData['name'];
+          _ageController.text = SharedPreferencesHelper.getString('dob')!;
+              // ??userData['dob'].toString();
+          _addressController.text = SharedPreferencesHelper.getString('address')!;
+              // ??userData['address'];
+          _cityController.text = SharedPreferencesHelper.getString('city')!;
+              // ??userData['city'];
         });
-
-
+        print('Info$_profileImage,${_nameController.text},${_ageController.text},${_addressController.text},${_cityController.text}');
       }
       else {
         print('User document does not exist');
@@ -214,21 +233,25 @@ class _ProfilePageState extends State<ProfilePage> {
       enabled: enabled,
       style: const TextStyle(
         color: m,
-        fontSize: 20,
+        fontSize: 18,
         overflow: TextOverflow.fade,
       ),
       decoration: InputDecoration(
         border: const OutlineInputBorder(
           borderSide: BorderSide(color: Colors.brown),
-          borderRadius: BorderRadius.all(Radius.circular(20)),
+          borderRadius: BorderRadius.all(Radius.circular(5)),
         ),
         enabledBorder: const OutlineInputBorder(
           borderSide: BorderSide(color:Colors.brown),
-          borderRadius: BorderRadius.all(Radius.circular(20)),
+          borderRadius: BorderRadius.all(Radius.circular(5)),
         ),
         focusedBorder: const OutlineInputBorder(
           borderSide: BorderSide(color:m),
-          borderRadius: BorderRadius.all(Radius.circular(20)),
+          borderRadius: BorderRadius.all(Radius.circular(5)),
+        ),
+        disabledBorder: const OutlineInputBorder(
+          borderSide: BorderSide(color:m),
+          borderRadius: BorderRadius.all(Radius.circular(5)),
         ),
         labelText: labelText,
         labelStyle: const TextStyle(color: m),
@@ -341,7 +364,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 enabled: _isEditing,
               ),
                   Gap.h(20),
-              textFormField(
+              textField(
                 context: context,
                 keyboardType: TextInputType.text,
                 // onChanged: () {},

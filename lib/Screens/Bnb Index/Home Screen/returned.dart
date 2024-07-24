@@ -8,7 +8,7 @@ class Returned extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(appBar: AppBar(title: const Text('Returned'),centerTitle: true,),
-    body: Padding(
+    body: const Padding(
       padding: EdgeInsets.fromLTRB(20,10,20,5),
       child: DeliveryStatus(status: 'returned',),
     ),);
