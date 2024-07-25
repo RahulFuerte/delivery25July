@@ -22,73 +22,23 @@ class DeliveryStatus extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return  RefreshIndicator(
-      onRefresh: _refresh,
-      child: StreamBuilder<DocumentSnapshot>(
-          stream: getAllOrderDetails(),
-          builder: (context, snapshot) {
-            if (snapshot.hasError) {
-              return Center(child: Text('Error: ${snapshot.error}'));
-            }
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (!snapshot.hasData || !snapshot.data!.exists) {
-              return Center(child: Text('No $status orders found.'));
-            }
+    return  OrderCard(
+      userId: Text('userUid'),
+      orderId: Text('orderId'),
+      name: Text('userName'),
+      address: Text('userAddress'),
+      dateTime: DateTime.now(),
+      status: 'new',
+      totalPrice: 56,
+      totalQty: totalQuantity,
+      onAccept: () {},
 
-            final allOrderDetails = (snapshot.data!.data() as Map<String, dynamic>)['allOrderDetails'] as List<dynamic>;
-
-            // Filter completed orders
-            final completedOrders = allOrderDetails.where((order) {
-              final orderMap = order as Map<String, dynamic>;
-              return orderMap[status] == true;
-            }).toList();
-
-            if (completedOrders.isEmpty) {
-              return Center(child: Text('No $status orders found.'));
-            }
-
-            return ListView.builder(
-              shrinkWrap: true,
-              physics: const ScrollPhysics(),
-              itemCount: completedOrders.length,
-              itemBuilder: (context, index) {
-                final order = completedOrders[index] as Map<String, dynamic>;
-                return OrderCard(
-                  name: order['name'],
-                  address: order['address'],
-                  dateTime: (order['orderTime'] as Timestamp).toDate(), // Convert timestamp to DateTime
-                  status: 'Completed',
-                  totalPrice: order['totalPrice'],
-                  totalQty: order['quantity'],
-                  onAccept: () {},
-                  onReject: () {},
-                  onYes: () {},
-                  onNo: () {},
-                  orderId: order['orderId'],
-                  userId: order['number'],
-                );
-              },
-            );
-          },
-        ),
-    );
+      onReject: (){},
+      onNo: (){},
+      onYes: (){},
+    ),
 
   }
- Stream<DocumentSnapshot> getAllOrderDetails() {
-   String? userId = SharedPreferencesHelper.getString('number');
-   return FirebaseFirestore.instance
-       .collection('Delivery User')
-       .doc(userId)
-       .collection('User Info')
-       .doc('Orders')
-       .snapshots();
- }
 
-  Future<void> _refresh() async{
-    await Future.delayed(const Duration(seconds: 3));
-  }
-}
 
 

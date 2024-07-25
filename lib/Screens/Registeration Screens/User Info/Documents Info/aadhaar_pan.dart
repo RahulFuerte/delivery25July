@@ -431,6 +431,7 @@ class _AadhaarPanDetailsState extends State<AadhaarPanDetails> {
         sName: 'Profile',
         data: userData,
       );
+      await uploadDataToShard
     } catch (e) {
       print('Error uploading user data: $e');
     }

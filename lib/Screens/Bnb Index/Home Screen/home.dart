@@ -42,6 +42,10 @@ class DashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    int completeDeliveryCount = 0;
+    int pendingDeliveryCount = 0;
+    int cancelDeliveryCount = 0;
+    int returnDeliveryCount = 0;
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -63,65 +67,36 @@ class DashboardScreen extends StatelessWidget {
             Card(
               child: Padding(
                   padding: const EdgeInsets.all(11.0),
-                  child: StreamBuilder<DocumentSnapshot>(
-                    stream: getDeliveryCountsStream(),
-                    builder: (context, snapshot) {
-                      if (snapshot.hasError) {
-                        return Text('Error: ${snapshot.error}');
-                      }
+                  child:
 
-                      switch (snapshot.connectionState) {
-                        case ConnectionState.waiting:
-                          return const Text('Loading....');
-                        default:
-                          if (!snapshot.hasData || !snapshot.data!.exists) {
-                            // var data = snapshot.data!.data() as Map<String, dynamic>;
-                            int completeDeliveryCount = 0;
-                            int pendingDeliveryCount = 0;
-                            int cancelDeliveryCount = 0;
-                            int returnDeliveryCount = 0;
-                            return buildGridView(
+                    buildGridView(
                                 context,
                                 completeDeliveryCount,
                                 pendingDeliveryCount,
                                 cancelDeliveryCount,
-                                returnDeliveryCount);
-                          }
+                                returnDeliveryCount),
+              ),),
 
-                          var data =
-                              snapshot.data!.data() as Map<String, dynamic>;
-                          int completeDeliveryCount =
-                              data['completedDeliveries'] ?? 0;
-                          int pendingDeliveryCount =
-                              data['pendingDeliveries'] ?? 0;
-                          int cancelDeliveryCount =
-                              data['canceledDeliveries'] ?? 0;
-                          int returnDeliveryCount =
-                              data['returnDeliveries'] ?? 0;
-                          return buildGridView(
-                              context,
-                              completeDeliveryCount,
-                              pendingDeliveryCount,
-                              cancelDeliveryCount,
-                              returnDeliveryCount);
-                      }
-                    },
-                  )),
-            ),
             Gap.h(30),
             Text(
               'New Orders',
               style: textTheme.headlineMedium,
             ),
             Gap.h(20),
-            const OrdersList1(
-              hasOrdered: true,
+             OrderCard(
+              userId: Text('userUid'),
+              orderId: Text('orderId'),
+              name: Text('userName'),
+              address: Text('userAddress'),
+              dateTime: DateTime.now(),
               status: 'new order',
-              orderReturn: false,
-              paymentStatus: false,
-              orderStatus: true,
-              deliveryStatus: false,
-              orderVisible: true,
+              totalPrice: 56,
+              totalQty: totalQuantity,
+              onAccept: () {},
+
+              onReject: (){},
+              onNo: (){},
+              onYes: (){},
             ),
           ],
         ),

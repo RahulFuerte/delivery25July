@@ -25,6 +25,7 @@ class SharedPreferencesHelper {
 
   static Future<void> setString(String key, String value) async {
     await _instance._prefs.setString(key, value);
+    // await _instance._prefs.setS
   }
 
   static String? getString(String key) {
